@@ -68,7 +68,16 @@ jobs:
 
       - name: Set package version
         run: |
-          npm version ${{ needs.tag.outputs.version }} --no-git-tag-version
+          # Automatically increment the patch version
+          # Change 'patch' to 'minor' or 'major' to increment those version numbers instead
+          # patch: 0.0.3 → 0.0.4 (increments the last number)
+          # minor: 0.0.3 → 0.1.0 (increments the middle number, resets last to 0)
+          # major: 0.0.3 → 1.0.0 (increments the first number, resets others to 0)
+          npm version patch --no-git-tag-version
+          
+          # Get the new version for logging
+          NEW_VERSION=$(node -p "require('./package.json').version")
+          echo "Auto-incremented version to: $NEW_VERSION"
 
       - name: Publish to npm
         env:
