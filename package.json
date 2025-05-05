@@ -24,6 +24,10 @@
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
   },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ntrannghia/test-re-export"
+  },
   "devDependencies": {
     "@eslint/js": "^9.21.0",
     "@tailwindcss/vite": "^4.0.17",
