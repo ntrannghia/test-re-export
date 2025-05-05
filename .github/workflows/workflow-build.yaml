@@ -1,0 +1,41 @@
+name: Build Test ReExport Lib
+
+on:
+  workflow_call:
+    inputs:
+      version:
+        description: 'The version of the build'
+        required: true
+        type: string
+      upload:
+        description: 'Upload the build artifacts'
+        required: false
+        type: boolean
+
+jobs:
+  lib:
+    name: Build & Test Library
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22.x"
+          cache: 'yarn'
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Install dependencies
+        run: yarn ci
+
+      - name: Build Library
+        run: yarn build
+
+      - name: Upload dist to Artifact
+        if: ${{ inputs.upload == true }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-re-export
+          path: dist

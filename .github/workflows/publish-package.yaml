@@ -1,0 +1,72 @@
+name: Publish Package to npmjs
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - release
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  tag:
+    name: Tag Release
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    outputs:
+      version: ${{ steps.get-release-version.outputs.version }}
+    steps:
+      - name: Clone repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: wemogy/get-release-version-action@v4.3.2
+        id: get-release-version
+        with:
+          git-username: ntrannghia
+          git-email: ntrannghia@gmail.com
+          mode: 'semantic'
+
+  build:
+    needs: [tag]
+    name: Build & Test
+    uses: ./.github/workflows/workflow-build.yaml
+    permissions:
+      contents: read
+      pull-requests: write
+    with:
+      version: ${{ needs.tag.outputs.version }}
+      upload: true
+    secrets: inherit
+
+  release:
+    needs: [tag, build]
+    name: Release
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download dist from Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: test-re-export
+          path: dist
+
+      - name: Set package version
+        run: |
+          npm version ${{ needs.tag.outputs.version }} --no-git-tag-version
+
+      - name: Publish to npm
+        env:
+          HUSKY: 0 # Disable Husky hooks
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          npm publish --provenance --access public       
